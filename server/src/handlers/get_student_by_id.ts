@@ -1,20 +1,32 @@
+import { db } from '../db';
+import { studentsTable } from '../db/schema';
 import { type GetStudentByIdInput, type Student } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const getStudentById = async (input: GetStudentByIdInput): Promise<Student | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a single student record by ID from the database.
-    // Should return null if student is not found.
-    return Promise.resolve({
-        id: input.id,
-        nis: '12345', // Placeholder NIS
-        nama: 'John Doe', // Placeholder name
-        kelas: 'X', // Placeholder class
-        jenis_kelamin: 'L', // Placeholder gender
-        tanggal_lahir: new Date('2000-01-01'), // Placeholder birth date
-        alamat: 'Placeholder Address', // Placeholder address
-        hp: '081234567890', // Placeholder phone
-        foto: null, // Placeholder photo
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Student);
+  try {
+    // Query student by ID
+    const results = await db.select()
+      .from(studentsTable)
+      .where(eq(studentsTable.id, input.id))
+      .execute();
+
+    // Return null if student not found
+    if (results.length === 0) {
+      return null;
+    }
+
+    // Return the first (and only) result
+    const student = results[0];
+    return {
+      ...student,
+      // Convert date string to Date object
+      tanggal_lahir: new Date(student.tanggal_lahir),
+      created_at: student.created_at,
+      updated_at: student.updated_at
+    };
+  } catch (error) {
+    console.error('Get student by ID failed:', error);
+    throw error;
+  }
 };

@@ -1,8 +1,25 @@
+import { db } from '../db';
+import { studentsTable } from '../db/schema';
 import { type Student } from '../schema';
+import { asc } from 'drizzle-orm';
 
 export const getStudents = async (): Promise<Student[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all student records from the database.
-    // Should return students ordered by created_at or nama for better UX.
-    return Promise.resolve([]);
+  try {
+    // Fetch all students ordered by name for better UX
+    const results = await db.select()
+      .from(studentsTable)
+      .orderBy(asc(studentsTable.nama))
+      .execute();
+
+    // Convert date strings to Date objects to match schema expectations
+    return results.map(student => ({
+      ...student,
+      tanggal_lahir: new Date(student.tanggal_lahir), // Convert string to Date
+      created_at: student.created_at, // Already Date from timestamp
+      updated_at: student.updated_at  // Already Date from timestamp
+    }));
+  } catch (error) {
+    console.error('Failed to fetch students:', error);
+    throw error;
+  }
 };
